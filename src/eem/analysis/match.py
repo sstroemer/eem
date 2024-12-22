@@ -6,11 +6,11 @@ from ..entsoepywrapper import EntsoePyWrapper
 
 
 class SquaredDistanceMatching:
-    def __init__(self, epw: EntsoePyWrapper, task: dict, weights=None, scale="standardize"):
+    def __init__(self, task: dict, weights=None, scale="standardize"):
         self._logger = logging.getLogger("eem")
 
-        self._epw = epw
         self._task = task
+        self._epw = self._task._epw
         self._weights = weights or dict(default=1.0)
 
         # TODO: implement "normalize"
@@ -98,6 +98,10 @@ class SquaredDistanceMatching:
         # Get total distance of all possible matches.
         total_distances = dict()
         for th in self._t_hist:
+            # TODO: remove this being hardcoded (prevents, e.g., comparing 11:00 against 23:00)
+            if abs(th.hour - self._task.t0.hour) > 3:
+                continue
+
             total_dist = 0.0
             valid = True
             for i in range(0, dh):
