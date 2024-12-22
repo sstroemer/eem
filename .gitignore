@@ -6,3 +6,4 @@
 uv.lock
 /*.py
 __pycache__/
+*=*
