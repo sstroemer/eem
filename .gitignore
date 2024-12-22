@@ -1,0 +1,8 @@
+.eem
+.ruff_cache
+.venv
+.env
+.python-version
+uv.lock
+./*.py
+__pycache__/
