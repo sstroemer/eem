@@ -1,4 +1,4 @@
-# EEM: Explain Electriciy Markets
+# EEM: Explain Electricity Markets
 
 ## Updating packages
 
