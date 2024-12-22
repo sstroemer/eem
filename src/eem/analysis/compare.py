@@ -30,12 +30,12 @@ def _est_p_values(s1: list, s2: list):
     return float(scipy.stats.ttest_ind(s1, s2, equal_var=False)[1]), float(_f_test_pvalue(s1, s2))
 
 
-def compare_matching(epw, task, matching, *, p=None, n=None):
+def compare_matching(task, matching, *, p=None, n=None):
     logger = logging.getLogger("eem")
     logger.info("Begin comparison of matching results.")
 
     # NOTE: this could also include `oth = matching.others(p=p, n=n)`
-    matches = dict(pos=matching.good(p=p, n=n), neg=matching.bad(p=p, n=n))
+    matches = dict(pos=matching.good(p=p, n=n), neg=matching.bad(p=p, n=n * 3))
 
     data_compare = dict()
     for country in EntsoePyWrapper.base_entries["countries"]:
@@ -43,7 +43,7 @@ def compare_matching(epw, task, matching, *, p=None, n=None):
             if kpi in task.kpis:
                 continue
 
-            data_hist = epw.get_history(f"query_{kpi}", country, end=task.t0)
+            data_hist = task._epw.get_history(f"query_{kpi}", country, end=task.t0)
 
             for mtype in matches.keys():
                 for t0, dist in matches[mtype]:
@@ -112,20 +112,20 @@ def compare_matching(epw, task, matching, *, p=None, n=None):
         # Save the differences.
         if not np.isnan(p_values[0]):
             differences.append(
-                dict(type="mean", p=p_values[0], country=index[0], kpi=kpi_name, val_pos=means[0], val_neg=means[1])
+                dict(type="mean", p=p_values[0], country=index[0], kpi=kpi_name, val_pos=means[0], val_neg=means[1], change=abs((means[0] - means[1]) / max(1, abs(means[1]))))
             )
         if not np.isnan(p_values[1]):
             differences.append(
-                dict(type="var", p=p_values[1], country=index[0], kpi=kpi_name, dir="hi" if vars[0] > vars[1] else "lo")
+                dict(type="var", p=p_values[1], country=index[0], kpi=kpi_name, dir="hi" if vars[0] > vars[1] else "lo", change = abs((vars[0] - vars[1]) / max(1, abs(vars[1]))))
             )
 
     # Sort the differences by p-value and return them.
     return sorted(differences, key=lambda x: x["p"])
 
 
-def _fmt_diff_to_md(differences: list, n_mean: int = 3, n_var: int = 1, n_neg: int = 1, p_threshold: float = 0.05):
+def _fmt_diff_to_md(differences: list, n_mean: int = 4, n_var: int = 1, n_neg: int = 1, p_threshold: float = 0.025):
     # Ensure the sorting internally.
-    differences = sorted(differences, key=lambda x: x["p"])
+    differences = sorted(differences, key=lambda x: x["p"] / x["change"])
     rev_diff = differences[::-1]
 
     entries = dict(mean=[], var=[], negative=[])
@@ -145,36 +145,33 @@ def _fmt_diff_to_md(differences: list, n_mean: int = 3, n_var: int = 1, n_neg: i
             if diff["p"] > 2.0 * p_threshold:
                 entries["negative"].append(diff)
 
-    # Construct the markdown string.
     ret = ""
 
     if len(entries["mean"]) > 0:
-        ret += "### MEAN results\n\n"
-        ret += "We observe the following significant differences for MEANS:\n"
+        ret += "1. We observe the following significant differences for MEANS:\n"
         for entry in entries["mean"]:
-            ret += f"- KPI \"{entry['kpi']}\" in country \"{entry['country']}\" shows a mean of {entry['val_pos']}; when market results are different it is around {entry['val_neg']}\n"
+            ret += f"- The mean hourly value of KPI \"{entry['kpi']}\" in country \"{entry['country']}\" is `{entry['val_pos']}` during the investigated time period\n"
+            ret += f"- The historic mean hourly value of KPI \"{entry['kpi']}\" in country \"{entry['country']}\" is `{entry['val_neg']}` during times which are distinct from the investigated time period\n\n"
     else:
-        ret += "We do not observe any significant differences for MEANS.\n"
+        ret += "We do not observe any significant differences for any mean KPIs.\n"
 
-    ret += "\n"
+    ret += "\n\n"
 
     if len(entries["var"]) > 0:
-        ret += "### VARIANCE results\n\n"
-        ret += "We observe the following significant differences for VARIANCES:\n"
+        ret += "2. We observe the following significant differences for VARIANCES:\n"
         for entry in entries["var"]:
             dir = "HIGHER" if entry["dir"] == "hi" else "LOWER"
-            ret += f"- KPI \"{entry['kpi']}\" in country \"{entry['country']}\" shows a variance that is significantly {dir} than when market results are different\n"
+            ret += f"- The variance of hourly value  of KPI \"{entry['kpi']}\" in country \"{entry['country']}\" during the given time interval is {dir} --- compared to times which are distinct from the investigated time period\n"
     else:
-        ret += "We do not observe any significant differences for VARIANCES.\n"
+        ret += "We do not observe any significant differences for any variances of any KPIs.\n"
 
-    ret += "\n"
+    ret += "\n\n"
 
     if len(entries["negative"]) > 0:
-        ret += "### NON_SIGNIFICANT factors\n\n"
-        ret += "However, there are factors that we cannot identify as having had an impact on market results:\n"
+        ret += "3. There are factors that we cannot identify as having had any impact on market outcomes:\n"
         for entry in entries["negative"]:
-            ret += f"- KPI \"{entry['kpi']}\" in country \"{entry['country']}\" does not show any significant difference in its MEAN value compared to when market results are different\n"
+            ret += f"- The mean hourly value of KPI \"{entry['kpi']}\" in country \"{entry['country']}\" does not show any significant difference between the investigated time periods and distinct historic times; no conclusions, at all (!), can be drawn from this factor.\n"
     else:
-        ret += "All investigated factors seem to be significantly different during this time --- this is unusual!\n"
+        ret += "All investigated factors seem to be significantly different during the investigated time period --- this is unusual!\n"
 
-    return ret
+    return ret + "\n"
