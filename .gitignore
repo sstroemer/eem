@@ -4,5 +4,5 @@
 .env
 .python-version
 uv.lock
-./*.py
+/*.py
 __pycache__/
