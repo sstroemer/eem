@@ -1,5 +1,26 @@
 # EEM: Explain Electricity Markets
 
+**Important:**  
+This repository serves ONLY as PROOF-OF-CONCEPT. It is in no way a product or service or anything similar. LLM-based
+result summaries can be partially wrong (play around and you'll find some, depending on how good your model of choice
+is). Further, the current matching/sorting/analyzing workflow is overly simplified.
+
+> Make sure to only use models with appropriate licenses, and do not copy paste the placeholders in this README.
+
+## About
+
+What this is?
+
+1. Create a "task", e.g., "why are electricity prices in X the way they are during time Y?"
+2. Analyse it, comparing to historic data, based on multiple KPIs
+3. Create some "take-aways" from the observed differences
+
+And (4.) ... use a LLM to dynamically create summaries/reports from those KPIs, trying to get some automated
+explainability into the results (using certain guidelines in the different prompts).
+
+Doing that manually, for a given situation, will always be better and more sophisticated -- but not everyone out there
+can actually do that.
+
 ## The `.env` file
 
 Put the following keys/tokens in there:
