@@ -7,3 +7,4 @@ uv.lock
 /*.py
 __pycache__/
 *=*
+*.egg-info
