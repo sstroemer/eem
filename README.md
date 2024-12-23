@@ -89,6 +89,8 @@ installed_models = {
 
 llm = eem.llm.BasicSummarizer(task, **installed_models[3], verbose=False)
 ans = llm.execute_all_steps(differences)
+
+llm = None  # clean-up memory!
 ```
 
 ### Answer
