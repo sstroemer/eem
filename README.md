@@ -30,6 +30,12 @@ ENTSOE_API_KEY=asd123415-asd324-asd1-4111-1135f3fgfg
 HUGGINGFACE_ACCESS_TOKEN=hf_asdfg23452sdfubg8792g34t7
 ```
 
+## Developing
+
+```shell
+uv pip install -e .
+```
+
 ## Updating packages
 
 Currently the proposed way is:
