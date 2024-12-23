@@ -20,6 +20,8 @@ class BasicSummarizer:
         "- If the reason for something is not clear or highly likely, it is better to not make any assumptions -- saying 'unknown reasons' is fine.\n"
         "- Contents inside <<>> are placeholders for the actual values you need to fill in, e.g., specific countries or KPIs.\n"
         "- You MUST ALWAYS refer to KPIs with a human readable name and not the technical name that is supplied.\n"
+        "- Renewable generation is most-often inexpensive\n"
+        "- Fossil generation often comes with higher marginal costs, driving up prices\n"
     )
 
     def __init__(self, task: Task, **kwargs):
@@ -40,6 +42,8 @@ class BasicSummarizer:
         self.step_mean(differences, echo=echo)
         self.step_variance(echo=echo)
         self.step_finalize(echo=echo)
+
+        return "\n\n".join([ia[2] + ia[1] for ia in self._interactions])
 
     def step_task_summary(self, *, echo: bool = False):
         request = {
@@ -94,11 +98,11 @@ class BasicSummarizer:
                 f"{BasicSummarizer._guide}\n\n"
                 f"A TEMPLATE ANSWER LOOKS LIKE THIS:\n\n---\n"
                 f"**Highlights:**\n"
-                f"1. The <<KPI>> in <<COUNTRY>> (<<COUNTRY SHORTCODE>>) seems to be extremely low.\n"
-                f"2. The <<KPI>> in <<COUNTRY>> (<<COUNTRY SHORTCODE>>) is higher than usual.\n"
-                f"3. The <<KPI>> in <<COUNTRY>> is lower than expected.\n\n"
+                f"1. The <<KPI>> in <<COUNTRY>> (<<COUNTRY SHORTCODE>>) seems to be extremely <<HIGH/LOW>>.\n"
+                f"2. The <<KPI>> in <<COUNTRY>> (<<COUNTRY SHORTCODE>>) is <<HIGHER/LOWER>> than usual, being <<OBSERVED VALUE>> compared to <<OTHER VALUE>> during other times.\n"
+                f"3. The <<KPI>> in <<COUNTRY>> is <<HIGHER/LOWER>> than expected.\n\n"
                 f"**Implications:**\n"
-                f"The low <KPI>> in <<COUNTRY>> might lead to higher <KPI>>, but is counter-acted by the high <KPI>> in <<COUNTRY>> and unusually low <KPI>> in <<COUNTRY>>.\n"
+                f"The <<HIGH/LOW>> <KPI>> in <<COUNTRY>> might lead to <<HIGHER/LOWER>> <KPI>>; <<MEANWHILE / HOWEVER>> the <<HIGH/LOW>> <KPI>> in <<COUNTRY>> and unusually <<HIGH/LOW>> <KPI>> in <<COUNTRY>>.\n"
                 f"---\n\n"
             ),
             "user": (
