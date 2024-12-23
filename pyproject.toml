@@ -10,9 +10,12 @@ license = {text = "MIT"}
 requires-python = ">=3.12"
 dependencies = [
     "entsoe-py>=0.6.16",
+    "llama-cpp-python>=0.3.5",
     "pathlib>=1.0.1",
     "python-dotenv>=1.0.1",
+    "rich>=13.9.4",
     "scipy>=1.14.1",
+    "transformers>=4.47.1",
 ]
 
 [dependency-groups]
