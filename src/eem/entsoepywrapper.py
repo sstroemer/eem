@@ -22,7 +22,7 @@ class EntsoePyWrapper:
             ),
             dict(
                 t0=pd.Timestamp(year=2024, month=1, day=1, hour=0, minute=0, tz="Europe/Vienna"),
-                t1=pd.Timestamp(year=2025, month=1, day=1, hour=0, minute=0, tz="Europe/Vienna"),
+                t1=pd.Timestamp(year=2024, month=12, day=31, hour=23, minute=0, tz="Europe/Vienna"),
             ),
         ],
         countries=["AT", "DE_LU"],

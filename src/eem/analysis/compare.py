@@ -112,11 +112,26 @@ def compare_matching(task, matching, *, p=None, n=None):
         # Save the differences.
         if not np.isnan(p_values[0]):
             differences.append(
-                dict(type="mean", p=p_values[0], country=index[0], kpi=kpi_name, val_pos=means[0], val_neg=means[1], change=abs((means[0] - means[1]) / max(1, abs(means[1]))))
+                dict(
+                    type="mean",
+                    p=p_values[0],
+                    country=index[0],
+                    kpi=kpi_name,
+                    val_pos=means[0],
+                    val_neg=means[1],
+                    change=abs((means[0] - means[1]) / max(1, abs(means[1]))),
+                )
             )
         if not np.isnan(p_values[1]):
             differences.append(
-                dict(type="var", p=p_values[1], country=index[0], kpi=kpi_name, dir="hi" if vars[0] > vars[1] else "lo", change = abs((vars[0] - vars[1]) / max(1, abs(vars[1]))))
+                dict(
+                    type="var",
+                    p=p_values[1],
+                    country=index[0],
+                    kpi=kpi_name,
+                    dir="hi" if vars[0] > vars[1] else "lo",
+                    change=abs((vars[0] - vars[1]) / max(1, abs(vars[1]))),
+                )
             )
 
     # Sort the differences by p-value and return them.

@@ -1,6 +1,7 @@
 from .entsoepywrapper import EntsoePyWrapper
 from .analysis.describe import describe
 
+
 class Task:
     def __init__(self, epw: EntsoePyWrapper, *, countries, kpis, t0, t1):
         self._countries = countries

@@ -11,8 +11,8 @@ class BasicSummarizer:
     _guide = (
         "You must use the following details to guide your answer and interpretation:\n"
         "- `net_position` is the current import/export state of a country\n"
-        "- Negative (low) `net_position` means a country is importing electricity\n"
-        "- Positive (high) `net_position` means a country is exporting electricity\n"
+        "- Negative (lower) `net_position` means a country is importing!\n"
+        "- Positive (higher) `net_position` means a country is exporting!\n"
         "- Generation, load, and similar values have the unit `MWh`.\n"
         "- Prices are in `EUR/MWh`.\n"
         "- Renewable generation (solar, wind, etc.) are heavily influenced by weather conditions.\n"
@@ -27,7 +27,7 @@ class BasicSummarizer:
 
         self._model = Llama.from_pretrained(**kwargs)
         self._console = Console()
-        
+
         self._task = task
 
         # TODO: This is EXTREMELY hardcoded to "1 country, 1 KPI" tasks.
@@ -40,7 +40,7 @@ class BasicSummarizer:
         self.step_mean(differences, echo=echo)
         self.step_variance(echo=echo)
         self.step_finalize(echo=echo)
-    
+
     def step_task_summary(self, *, echo: bool = False):
         request = {
             "system": (
@@ -53,9 +53,9 @@ class BasicSummarizer:
                 f"Create a single sentence to summarize the task: Include the full country name, a human readable name "
                 f"of the KPI, and give the inspected time period in a short format. The end timestamp is non-inclusive."
                 f"Only return one sentence. DO NOT REPEAT THE TASK DESCRIPTION."
-            )
+            ),
         }
-        
+
         return self._llm_execute_fenced_request(request, prefix="# Task\n\n", echo=echo)
 
     def step_kpi_summary(self, *, echo: bool = False):
@@ -76,14 +76,12 @@ class BasicSummarizer:
             str_descr += f"- The maximal / highest `{self._task.kpis[0]}` during the inspected period was lower than {val}% of historical `{self._task.kpis[0]}`s\n"
 
         request = {
-            "system": (
-                f"You know the following high-level information:\n{str_descr}"
-            ),
+            "system": (f"You know the following high-level information:\n{str_descr}"),
             "user": (
                 f"Summarize your knowledge about the high-level information given, in relation to the task that you already described, in one sentence."
-            )
+            ),
         }
-        
+
         return self._llm_execute_fenced_request(request, prefix="# Analysis\n\n## Overview\n\n", echo=echo)
 
     def step_mean(self, differences: list, *, echo: bool = False):
@@ -105,9 +103,9 @@ class BasicSummarizer:
             ),
             "user": (
                 f"Explain the results and their implications only based on the background information related to MEAN results. Do not copy the template answer verbatim but use its style."
-            )
+            ),
         }
-        
+
         return self._llm_execute_fenced_request(request, prefix="## Details\n\n### Mean\n\n", echo=echo)
 
     def step_variance(self, *, echo: bool = False):
@@ -117,9 +115,9 @@ class BasicSummarizer:
                 f"Make use of the previously given background information, as well as the guide and template, "
                 f"to explain the results and their implications related to VARIANCE results. "
                 f"Do not copy the template answer. Focus on the variance results only."
-            )
+            ),
         }
-        
+
         return self._llm_execute_fenced_request(request, prefix="### Variance\n\n", echo=echo)
 
     def step_finalize(self, *, echo: bool = False):
@@ -130,23 +128,25 @@ class BasicSummarizer:
                 f"You should include - based on the previously given background information and guide - a small note related to "
                 f"step (3.) which touches upon KPIs that seem to have no impact. Do not copy the template answer. Maximum four sentences."
                 f"Finalize the text with the derivation of the high-level / overview insights on the task, triggered by the effects you analyzed."
-            )
+            ),
         }
-        
+
         return self._llm_execute_fenced_request(request, prefix="# Summary\n\n", echo=echo)
 
     def _llm_execute_fenced_request(self, request: dict, *, prefix: str = "", echo: bool):
         prompt = ""
         prompt += "<|im_start|>system\nYou are Qwen, created by Alibaba Cloud. You are a helpful assistant.<|im_end|>\n"
         prompt += "<|im_start|>system\n"
-        prompt += "You act as electricity market expert, you do not guess, and only make use of knowledge that you have.\n\n"
+        prompt += (
+            "You act as electricity market expert, you do not guess, and only make use of knowledge that you have.\n\n"
+        )
 
         if len(self._interactions) > 0:
             # Include previous interactions.
             for ia in self._interactions:
                 prompt += ia[0]["system"]
                 prompt += "<|im_end|>\n<|im_start|>user\n"
-                prompt += ia[0]["user"]            
+                prompt += ia[0]["user"]
                 prompt += "<|im_end|>\n<|im_start|>assistant\n"
                 prompt += ia[1]
                 prompt += "<|im_end|>\n<|im_start|>system\n"
@@ -164,7 +164,7 @@ class BasicSummarizer:
         prev_output = ""
         for ia in self._interactions:
             prev_output += ia[2] + ia[1] + "\n\n"
-        
+
         answer = ""
         for ans in self._model(prompt, stop=["<|im_end|>"], stream=True, temperature=0.0, max_tokens=None):
             answer += ans["choices"][0]["text"]
@@ -172,7 +172,7 @@ class BasicSummarizer:
                 self._trm_cls()
                 self._trm_move(0, 0)
                 self._console.print(Markdown(prev_output + prefix + answer))
-        
+
         self._interactions.append((request, answer, prefix))
         return answer
 
@@ -180,4 +180,4 @@ class BasicSummarizer:
         print("\033[%d;%dH" % (line, col))
 
     def _trm_cls(self):
-        os.system('cls' if os.name=="nt" else "clear")
+        os.system("cls" if os.name == "nt" else "clear")
